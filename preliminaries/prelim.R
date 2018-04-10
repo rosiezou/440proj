@@ -1,10 +1,34 @@
 # Generate imputed response
 gen.imp.resp <- function(df)
 {
-  df.analysis <- df
+  df.interp <- df # For initial interpolation
+  
+  for(q in names(df))
+  {
+    responses <- df[[q]]
+    min.resp <- min(responses)
+    max.resp <- max(responses)
+    
+    probs <- cumsum(colSums(sapply(min.resp:max.resp, 
+                                   FUN = function(i) {responses == i})) / nrow(df))
+    
+    quantiles <- c(-Inf, qnorm(probs))
+    
+    lower <- quantiles[responses] # Get lower bound of bins for responses
+    upper <- quantiles[responses + 1] # Same but get upper bound
+    
+    # Generate from truncated normal
+    sim.truncnorm <- rtruncnorm(n = 1, a = lower, b = upper, mean = 0, sd = 1)
+    
+    df.interp[q] <- sim.truncnorm
+  }
+  
+  df.analysis <- df.interp
   
   for(q in names(df.analysis)) # For each column
   {
+    df.analysis[q] <- df[[q]]
+    
     # Construct regression formula with q as the response
     regression.formula <- as.formula(paste("as.ordered(", q, ")", "~ ."))
     inhs.polr <- polr(regression.formula, data = df.analysis, method = "probit")
