@@ -53,3 +53,39 @@ multiis <- read.csv("data/MULTIIS.csv")
 imputed <- gen.imp.resp(multiis)
 
 head(imputed)
+
+# df is the data frame of on which to perform factor analysis
+# grp.indic is the vector of length (# columns in df) specifying which latent variable
+# each column refers to.
+gen.latent.vars <- function(df, grp.indicator, scores = "Bartlett")
+{
+  latent.labels <- unique(grp.indicator) # Get unique latent variable labels
+  
+  # Create as matrix first, then coerce to data.frame. This is because it's easiest
+  # to make a matrix with our desired dimensions, and then treat it as a data.frame
+  # later on. 
+  latent.vars.mtx <- matrix(nrow = nrow(df), ncol = length(latent.labels))
+  latent.vars.df <- as.data.frame(latent.vars.mtx) 
+  names(latent.vars.df) <- latent.labels
+  
+  for(label in latent.labels)
+  {
+    latent.cols.indic <- grp.indicator == label # TRUE if column corresponds to label
+    latent.cols.df <- df[latent.cols.indic] # sub-data.frame of only those columns corresp. to label
+    
+    fa <- factanal(latent.cols.df, factors = 1, scores = scores) # perform factor analysis
+    
+    latent.vars.df[label] <- fa$scores[,1] # Get scores *as vector* so we don't update column name
+  }
+  
+  return(latent.vars.df)
+}
+
+# Test
+# Create indicators (a label indicating which latent variable the question corresponds to)
+grp.indicator <- sapply(names(imputed), FUN = 
+                          function(x){strsplit(x, split = "_")[[1]][2]})
+
+gen.latent.vars(df, grp.indicator = grp.indicator)
+  
+  
