@@ -80,7 +80,7 @@ gen.imp.resp <- function(data, num.iter = 20)
 #' @param data a (non-empty) numeric vector of data values.
 #' @param grp.indicator a (non-empty) numeric vector of data values.
 #' @param scores number of bootstrap resamples to perform.
-#' @return A data.frame containing the underlying latent variable estimates.
+#' @return A list l of length 2, where l[[1]] is a data.frame containing the underlying latent variable estimates, and l[[2]] is a vector of j factor analyses objects (j is the total number of latent variables).
 #' @export
 #' @examples
 #' # Create indicators (a label indicating which latent variable the question corresponds to)
@@ -100,17 +100,87 @@ gen.latent.vars <- function(data, grp.indicator, scores = "Bartlett")
   latent.vars.mtx <- matrix(nrow = nrow(data), ncol = length(latent.labels))
   latent.vars.df <- as.data.frame(latent.vars.mtx)
   names(latent.vars.df) <- latent.labels
-
+  faresults <- vector(mode="list", length = length(latent.labels))
+  index = 1
   for(label in latent.labels)
   {
     latent.cols.indic <- grp.indicator == label # TRUE if column corresponds to label
     latent.cols.df <- data[latent.cols.indic] # sub-data.frame of only those columns corresp. to label
 
     fa <- factanal(latent.cols.df, factors = 1, scores = scores) # perform factor analysis
-
+    
+    faresults[[index]] <- fa
+    index <- index + 1
     latent.vars.df[label] <- fa$scores[,1] # Get scores *as vector* so we don't update column name
   }
 
-  return(latent.vars.df)
+  return(list(latent.vars.df, faresults))
 }
 
+#' Pool analyses results given M imputed data sets and their estimated parameters
+#'
+#' @param M a positive integer indicating the total number of imputed data sets.
+#' @param latent.vars a (non-empty) list of lists returned by the gen.latent.vars function.
+#' @return A list of lists of 5 elements consisting of: within-imputation variance, between-imputation variance, total variance, number of analyses, and a vector of final estimated parameters
+#' @export
+#' @examples
+#' # Create indicators (a label indicating which latent variable the question corresponds to)
+#' grp.indicator <- sapply(names(imputed), FUN =
+#'                          function(x){strsplit(x, split = "_")[[1]][2]})
+#'
+#' latent.vars <- gen.latent.vars(imputed, grp.indicator = grp.indicator)
+#'
+#' head(latent.vars)
+pool.analyses <- function(M, latent.vars){
+  if (M < 1 || length(latent.vars) < 1){
+    stop("At least 1 analysis is needed for pooling")
+  }
+  
+  n_latent_vars <- length(latent.vars[[1]][[2]]) ## get the total number of latent variables
+
+  pool.out <- vector(mode="list", length = n_latent_vars) ## final result will be a list of length n_latent_vars
+  
+  for (i in 1:n_latent_vars){
+    
+    final_loading_matrix <- c() ## used for calculating between-imputation variance for latent variable i
+    
+    sample_variances <- 0 ## used for calculating within-imputation variance for latent variable i
+    
+    for (j in 1:M){
+      imputed.data <- latent.vars[[j]][[1]]
+      fa.obj <- latent.vars[[j]][[2]][[i]]
+      row <- t(fa.obj$loadings)
+      final_loading_matrix <- rbind(final_loading_matrix, row)
+      sample_variances <- sample_variances + var(imputed.data[,i])
+    }
+    
+    within_imputation_variance <- sample_variances / M
+    
+    between_imputation_variance <- 0
+    
+    mean_parameters <- final_loading_matrix[1,]
+    
+    for (k in 1:M){
+      if (k > 1){
+        mean_parameters <- mean_parameters + final_loading_matrix[k,]
+      }
+    }
+    
+    mean_parameters <- mean_parameters / M
+    
+    for (l in 1:M){
+      vec <- final_loading_matrix[l,] - mean_parameters
+      between_imputation_variance <- between_imputation_variance + (t(vec) %*% vec)[1,1]
+    }
+    
+    between_imputation_variance <- between_imputation_variance / (M - 1)
+    
+    total_variance <- within_imputation_variance + between_imputation_variance + 
+      between_imputation_variance/M ## total variance as calculated per Rubin's rule
+    
+    ## now pack all key values into one list and then add it to pool.out
+    pool.out[[i]] <- list(within_imputation_variance, between_imputation_variance, 
+                          total_variance, M, mean_parameters)
+  }
+  return(pool.out)
+}

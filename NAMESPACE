@@ -2,6 +2,7 @@
 
 export(gen.imp.resp)
 export(gen.latent.vars)
+export(pool.analyses)
 importFrom(MASS,polr)
 importFrom(data.table,setnames)
 importFrom(stats,factanal)
