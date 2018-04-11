@@ -1,0 +1,18 @@
+Package: stat440pkg
+Type: Package
+Title: Analyze Continuous Latent Variables From Ordinal Survey Responses 
+Version: 0.1.0
+Authors@R: c(
+  person("Ian", "Waudby-Smith", email = "ian.waudby-smith@edu.uwaterloo.ca", role = c("aut", "cre")),
+  person("Rosie", "Zou", email = "y53zou@edu.uwaterloo.ca", role = "aut")
+  ) 
+Description: Given a set of ordinal survey questions, we may be interested in imputing some sort of latent continuous variable from these responses. In addition, a researcher may have created these questions with certain "themes" or "underlying latent variables" in mind. Given this construction, we may be interested in computing these latent variables and ultimately performing some statistical analysis on them. This package acts as a tool for researchers to investigate these problems. 
+Depends: R (>= 3.3.0)
+Imports:
+  stats,
+  truncnorm,
+  MASS
+License: GPL-3 | file LICENSE 
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1.9000
