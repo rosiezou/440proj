@@ -2,7 +2,7 @@
 % Please edit documentation in R/prelim.R
 \name{gen.latent.vars}
 \alias{gen.latent.vars}
-\title{Generate latent underlying variables given latent question responses}
+\title{Generate latent underlying variables given imputed question responses}
 \usage{
 gen.latent.vars(data, grp.indicator, scores = "Bartlett", num.iter = 20)
 }
@@ -16,7 +16,9 @@ gen.latent.vars(data, grp.indicator, scores = "Bartlett", num.iter = 20)
 \item{num.iter}{number of iterations to use in imputation step}
 }
 \value{
-A data.frame containing the underlying latent variable estimates.
+A list l of length 2, where l[[1]] is a data.frame containing the underlying
+latent variable estimates, and l[[2]] is a vector of j factor analyses objects
+(j is the total number of latent variables).
 }
 \description{
 Given ordinal responses to survey questions, we generate the

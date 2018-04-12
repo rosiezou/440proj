@@ -128,7 +128,7 @@ gen.latent.vars <- function(data, grp.indicator, scores = "Bartlett", num.iter =
 #' Given ordinal responses to survey questions, we generate multiple
 #' underlying latent variable datasets
 #'
-#' @param n number of datasets to construct.
+#' @param M number of datasets to construct.
 #' @param data a (non-empty) numeric vector of data values.
 #' @param grp.indicator a (non-empty) numeric vector of data values.
 #' @param scores type of score to use.
@@ -138,28 +138,29 @@ gen.latent.vars <- function(data, grp.indicator, scores = "Bartlett", num.iter =
 #' @examples
 #' setwd("~/GitProjects/440proj") # Set to project folder
 #' multiis <- read.csv("data/MULTIIS.csv")
-#' imputed <- gen.imp.resp(multiis)
 #'
 #' # Create indicators (a label indicating which latent variable the question corresponds to)
-#' grp.indicator <- sapply(names(imputed), FUN =
+#' grp.indicator <- sapply(names(multiis), FUN =
 #'                          function(x){strsplit(x, split = "_")[[1]][2]})
 #'
-#' latent.datasets <- gen.latent.datasets(imputed, grp.indicator = grp.indicator, num.iter = 5)
+#' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 5)
 #'
-#' head(latent.datasets)
-gen.latent.datasets <- function(n, data, grp.indicator, scores = "Bartlett", num.iter = 20)
+#' head(latent.datasets[[1]])
+#'
+#' head(latent.datasets[[2]])
+gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num.iter = 20)
 {
   latent.labels <- unique(grp.indicator)
   num.vars <- length(latent.labels)
 
   empty <- as.data.frame(matrix(NA, nrow = nrow(data), ncol = num.vars))
   names(empty) <- latent.labels
-  datasets <- rep(list(empty), n)
+  datasets <- rep(list(empty), M)
 
-  for(i in 1:n)
+  for(i in 1:M)
   {
     latent.vars <- gen.latent.vars(data = data, grp.indicator = grp.indicator,
-                                   scores = scores, num.iter = num.iter)
+                                   scores = scores, num.iter = num.iter)[[1]]
 
     datasets[[i]] <- latent.vars
   }
@@ -167,20 +168,20 @@ gen.latent.datasets <- function(n, data, grp.indicator, scores = "Bartlett", num
   return(datasets)
 }
 
-#' Pool analyses results given M imputed data sets and their estimated parameters
+#' Pool analyses results given M latent variable data sets, and estimate parameters
 #'
-#' @param M a positive integer indicating the total number of imputed data sets.
-#' @param latent.vars a (non-empty) list of lists returned by the gen.latent.vars function.
+#' @param latent.datasets a (non-empty) list of lists returned by the gen.latent.vars function.
 #' @return A list of lists of 5 elements consisting of: within-imputation variance, between-imputation variance, total variance, number of analyses, and a vector of final estimated parameters
 #' @export
 #' @examples
 #'
-pool.analyses <- function(M, latent.vars){
-  if (M < 1 || length(latent.vars) < 1){
+pool.analyses <- function(latent.datasets){
+  M <- length(latent.datasets)
+  if (M < 1){
     stop("At least 1 analysis is needed for pooling")
   }
 
-  n_latent_vars <- length(latent.vars[[1]][[2]]) ## get the total number of latent variables
+  n_latent_vars <- length(latent.datasets[[1]][[2]]) ## get the total number of latent variables
 
   pool.out <- vector(mode="list", length = n_latent_vars) ## final result will be a list of length n_latent_vars
 
@@ -191,8 +192,8 @@ pool.analyses <- function(M, latent.vars){
     sample_variances <- 0 ## used for calculating within-imputation variance for latent variable i
 
     for (j in 1:M){
-      imputed.data <- latent.vars[[j]][[1]]
-      fa.obj <- latent.vars[[j]][[2]][[i]]
+      imputed.data <- latent.datasets[[j]][[1]]
+      fa.obj <- latent.datasets[[j]][[2]][[i]]
       row <- t(fa.obj$loadings)
       final_loading_matrix <- rbind(final_loading_matrix, row)
       sample_variances <- sample_variances + var(imputed.data[,i])
@@ -229,6 +230,7 @@ pool.analyses <- function(M, latent.vars){
   return(pool.out)
 }
 
+# This doesn't do a hypothesis test yet but currently just outpus correlation
 pooled.cor.test <- function(datasets, indices = c(1, 2), alternative = "two.sided", method = "pearson")
 {
   num.sets <- length(datasets)

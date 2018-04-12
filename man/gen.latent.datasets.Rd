@@ -4,11 +4,11 @@
 \alias{gen.latent.datasets}
 \title{Generate multiple datasets of latent underlying variables}
 \usage{
-gen.latent.datasets(n, data, grp.indicator, scores = "Bartlett",
+gen.latent.datasets(M, data, grp.indicator, scores = "Bartlett",
   num.iter = 20)
 }
 \arguments{
-\item{n}{number of datasets to construct.}
+\item{M}{number of datasets to construct.}
 
 \item{data}{a (non-empty) numeric vector of data values.}
 
@@ -28,12 +28,14 @@ underlying latent variable datasets
 \examples{
 setwd("~/GitProjects/440proj") # Set to project folder
 multiis <- read.csv("data/MULTIIS.csv")
-imputed <- gen.imp.resp(multiis)
+
 # Create indicators (a label indicating which latent variable the question corresponds to)
-grp.indicator <- sapply(names(imputed), FUN =
+grp.indicator <- sapply(names(multiis), FUN =
                          function(x){strsplit(x, split = "_")[[1]][2]})
 
-latent.datasets <- gen.latent.datasets(imputed, grp.indicator = grp.indicator, num.iter = 5)
+latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 5)
 
-head(latent.datasets)
+head(latent.datasets[[1]])
+
+head(latent.datasets[[2]])
 }
