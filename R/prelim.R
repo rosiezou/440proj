@@ -9,7 +9,6 @@ library(MASS)
 #' @importFrom MASS polr
 #' @importFrom truncnorm rtruncnorm
 #' @importFrom stats quantile
-#' @importFrom data.table setnames
 #' @param data a data.frame containing ordinal variables (e.g. survey responses).
 #' @param num.iter a number specifying the number of times to iterate the imputation (defaults to 20)
 #' @return A data.frame containing the imputed responses.
@@ -73,16 +72,20 @@ gen.imp.resp <- function(data, num.iter = 20)
 
 #' Generate latent underlying variables given latent question responses
 #'
-#' Given imputed latent variable responses to survey questions, we generate the
+#' Given ordinal responses to survey questions, we generate the
 #' underlying latent variables that correspond to those questions
 #'
 #' @importFrom stats factanal
 #' @param data a (non-empty) numeric vector of data values.
 #' @param grp.indicator a (non-empty) numeric vector of data values.
-#' @param scores number of bootstrap resamples to perform.
+#' @param scores type of score to use.
+#' @param num.iter number of iterations to use in imputation step
 #' @return A data.frame containing the underlying latent variable estimates.
 #' @export
 #' @examples
+#' setwd("~/GitProjects/440proj") # Set to project folder
+#' multiis <- read.csv("data/MULTIIS.csv")
+#' imputed <- gen.imp.resp(multiis)
 #' # Create indicators (a label indicating which latent variable the question corresponds to)
 #' grp.indicator <- sapply(names(imputed), FUN =
 #'                          function(x){strsplit(x, split = "_")[[1]][2]})
@@ -90,21 +93,22 @@ gen.imp.resp <- function(data, num.iter = 20)
 #' latent.vars <- gen.latent.vars(imputed, grp.indicator = grp.indicator)
 #'
 #' head(latent.vars)
-gen.latent.vars <- function(data, grp.indicator, scores = "Bartlett")
+gen.latent.vars <- function(data, grp.indicator, scores = "Bartlett", num.iter = 20)
 {
+  imp.resp.data <- gen.imp.resp(data, num.iter = num.iter)
   latent.labels <- unique(grp.indicator) # Get unique latent variable labels
 
   # Create as matrix first, then coerce to data.frame. This is because it's easiest
   # to make a matrix with our desired dimensions, and then treat it as a data.frame
   # later on.
-  latent.vars.mtx <- matrix(nrow = nrow(data), ncol = length(latent.labels))
+  latent.vars.mtx <- matrix(nrow = nrow(imp.resp.data), ncol = length(latent.labels))
   latent.vars.df <- as.data.frame(latent.vars.mtx)
   names(latent.vars.df) <- latent.labels
 
   for(label in latent.labels)
   {
     latent.cols.indic <- grp.indicator == label # TRUE if column corresponds to label
-    latent.cols.df <- data[latent.cols.indic] # sub-data.frame of only those columns corresp. to label
+    latent.cols.df <- imp.resp.data[latent.cols.indic] # sub-data.frame of only those columns corresp. to label
 
     fa <- factanal(latent.cols.df, factors = 1, scores = scores) # perform factor analysis
 
@@ -114,3 +118,62 @@ gen.latent.vars <- function(data, grp.indicator, scores = "Bartlett")
   return(latent.vars.df)
 }
 
+#' Generate multiple datasets of latent underlying variables
+#'
+#' Given ordinal responses to survey questions, we generate multiple
+#' underlying latent variable datasets
+#'
+#' @param n number of datasets to construct.
+#' @param data a (non-empty) numeric vector of data values.
+#' @param grp.indicator a (non-empty) numeric vector of data values.
+#' @param scores type of score to use.
+#' @param num.iter number of iterations to use in imputation step
+#' @return A list containing datasets with latent underlying variables
+#' @export
+#' @examples
+#' setwd("~/GitProjects/440proj") # Set to project folder
+#' multiis <- read.csv("data/MULTIIS.csv")
+#' imputed <- gen.imp.resp(multiis)
+#' # Create indicators (a label indicating which latent variable the question corresponds to)
+#' grp.indicator <- sapply(names(imputed), FUN =
+#'                          function(x){strsplit(x, split = "_")[[1]][2]})
+#'
+#' latent.datasets <- gen.latent.datasets(imputed, grp.indicator = grp.indicator, num.iter = 5)
+#'
+#' head(latent.datasets)
+gen.latent.datasets <- function(n, data, grp.indicator, scores = "Bartlett", num.iter = 20)
+{
+  latent.labels <- unique(grp.indicator)
+  num.vars <- length(latent.labels)
+
+  empty <- as.data.frame(matrix(NA, nrow = nrow(data), ncol = num.vars))
+  names(empty) <- latent.labels
+  datasets <- rep(list(empty), n)
+
+  for(i in 1:n)
+  {
+    latent.vars <- gen.latent.vars(data = data, grp.indicator = grp.indicator,
+                                   scores = scores, num.iter = num.iter)
+
+    datasets[[i]] <- latent.vars
+  }
+
+  return(datasets)
+}
+
+pooled.cor.test <- function(datasets, indices = c(1, 2), alternative = "two.sided", method = "pearson")
+{
+  num.sets <- length(datasets)
+
+  corr <- numeric(num.sets)
+  for(i in 1:num.sets)
+  {
+    dataset <- datasets[[i]]
+    if(method == "pearson")
+    {
+      corr[i] <- cor(dataset[indices[1]], dataset[indices[2]])
+    }
+  }
+
+  mean(corr)
+}
