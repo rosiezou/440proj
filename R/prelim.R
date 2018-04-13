@@ -239,20 +239,55 @@ pool.analyses <- function(latent.datasets, formula, method){
        total.variance = t, relative.increase.in.variance.due.to.nonresponse = r, 
        fraction.of.missing.info = lambda)
 }
-# This doesn't do a hypothesis test yet but currently just outpus correlation
+
+#' Perform a correlation test on multiply imputed datasets
+#'
+#' Given imputed datasets, perform a correlation test between specified columns
+#'
+#' @param datasets a list of data.frames
+#' @param indices a vector of length two specifying the index of the columns on which to test correlation
+#' @param grp.indicator a vector indicating which underlying group the columns in each dataset correpsonds to
+#' @param alternative the alternative hypothesis
+#' @param method the method to compute correlation. Currently only "pearson" is supported.
+#' @return A list containing the mean correlation and a p-value from the hypothesis test
+#' @export
+#' @examples
+#' setwd("~/GitProjects/440proj") # Set to project folder
+#' multiis <- read.csv("data/MULTIIS.csv")
+#'
+#' # Create indicators (a label indicating which latent variable the question corresponds to)
+#' grp.indicator <- sapply(names(multiis), FUN =
+#'                          function(x){strsplit(x, split = "_")[[1]][2]})
+#'
+#' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 5)
+#'
+#' pooled.cor.test(latent.datasets, indices = c(1,3))
 pooled.cor.test <- function(datasets, indices = c(1, 2), alternative = "two.sided", method = "pearson")
 {
-  num.sets <- length(datasets)
-
+  num.sets <- length(datasets) # number of datasets
+  num.row <- nrow(datasets[[1]]) # number of rows in each dataset
   corr <- numeric(num.sets)
+  piv.val <- numeric(num.sets) # pivotal value
+
   for(i in 1:num.sets)
   {
     dataset <- datasets[[i]]
     if(method == "pearson")
     {
-      corr[i] <- cor(dataset[indices[1]], dataset[indices[2]])
+      r.value <- cor(dataset[indices[1]], dataset[indices[2]]) # sample correlation
+      corr[i] <- r.value
+      piv.val[i] <- r.value * sqrt(num.row - 2) / sqrt(1 - r.value^2)
     }
   }
 
-  mean(corr)
+  piv.var.between <- sum((piv.val - mean(piv.val))^2) / (num.sets - 1)
+  piv.var.total <- 1 + piv.var.between + piv.var.between / num.sets # var.within is 1 since distribution is t, so asymptotically N(0,1)
+
+  p.val <- 2 * pnorm(abs(mean(piv.val) / sqrt(piv.var.total)), lower.tail = FALSE)
+
+  return(list(mean.corr = mean(corr),
+              mean.piv.val = mean(piv.val),
+              piv.var.total = piv.var.total,
+              piv.var.between = piv.var.between,
+              p.val = p.val))
 }
