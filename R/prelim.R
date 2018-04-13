@@ -233,17 +233,30 @@ pool.analyses <- function(latent.datasets){
 # This doesn't do a hypothesis test yet but currently just outpus correlation
 pooled.cor.test <- function(datasets, indices = c(1, 2), alternative = "two.sided", method = "pearson")
 {
-  num.sets <- length(datasets)
-
+  num.sets <- length(datasets) # number of datasets
+  num.row <- nrow(datasets[[1]]) # number of rows in each dataset
   corr <- numeric(num.sets)
+  piv.val <- numeric(num.sets) # pivotal value
+
   for(i in 1:num.sets)
   {
     dataset <- datasets[[i]]
     if(method == "pearson")
     {
-      corr[i] <- cor(dataset[indices[1]], dataset[indices[2]])
+      r.value <- cor(dataset[indices[1]], dataset[indices[2]]) # sample correlation
+      corr[i] <- r.value
+      piv.val[i] <- r.value * sqrt(num.row - 2) / sqrt(1 - r.value^2)
     }
   }
 
-  mean(corr)
+  piv.var.between <- sum((piv.val - mean(piv.val))^2) / (num.sets - 1)
+  piv.var.total <- 1 + piv.var.between + piv.var.between / num.sets # var.within is 1 since distribution is t, so asymptotically N(0,1)
+
+  p.val <- 2 * pnorm(abs(mean(piv.val) / sqrt(piv.var.total)), lower.tail = FALSE)
+
+  return(list(mean.corr = mean(corr),
+              mean.piv.val = mean(piv.val),
+              piv.var.total = piv.var.total,
+              piv.var.between = piv.var.between,
+              p.val = p.val))
 }
