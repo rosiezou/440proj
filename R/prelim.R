@@ -230,7 +230,28 @@ pool.analyses <- function(latent.datasets){
   return(pool.out)
 }
 
-# This doesn't do a hypothesis test yet but currently just outpus correlation
+#' Perform a correlation test on multiply imputed datasets
+#'
+#' Given imputed datasets, perform a correlation test between specified columns
+#'
+#' @param datasets a list of data.frames
+#' @param indices a vector of length two specifying the index of the columns on which to test correlation
+#' @param grp.indicator a vector indicating which underlying group the columns in each dataset correpsonds to
+#' @param alternative the alternative hypothesis
+#' @param method the method to compute correlation. Currently only "pearson" is supported.
+#' @return A list containing the mean correlation and a p-value from the hypothesis test
+#' @export
+#' @examples
+#' setwd("~/GitProjects/440proj") # Set to project folder
+#' multiis <- read.csv("data/MULTIIS.csv")
+#'
+#' # Create indicators (a label indicating which latent variable the question corresponds to)
+#' grp.indicator <- sapply(names(multiis), FUN =
+#'                          function(x){strsplit(x, split = "_")[[1]][2]})
+#'
+#' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 5)
+#'
+#' pooled.cor.test(latent.datasets, indices = c(1,3))
 pooled.cor.test <- function(datasets, indices = c(1, 2), alternative = "two.sided", method = "pearson")
 {
   num.sets <- length(datasets) # number of datasets
