@@ -166,14 +166,14 @@ gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num
 #'
 #' @param latent.datasets a (non-empty) list of lists returned by the gen.latent.vars function.
 #' @param formula a valid formula in the form of response.var ~ independent.vars
-#' @param method a valid regression method. Currently only supports lm and glm
-#' @return A list 9 elements consisting of: point estimate for parameter Q, within-imputaiton variance, 
+#' @param method a regression function (e.g. lm). Currently only supports lm and glm
+#' @return A list 9 elements consisting of: point estimate for parameter Q, within-imputaiton variance,
 #' estimates of parameter Q obtained from M multiple imputations, estimates of variance, difference
 #' between estimates of parameter Q and the final point estimate, between-imputation variance,
 #' total variance, relative increase in variance due to nonresponse, and fraction of missing information.
 #' These values are calculated according to Rubin's Rules for Multiple Imputation. For more mathematical
-#' details, please refer to page 5 of this UCLA paper 
-#' https://stats.idre.ucla.edu/wp-content/uploads/2016/02/multipleimputation.pdf \(section title 
+#' details, please refer to page 5 of this UCLA paper
+#' https://stats.idre.ucla.edu/wp-content/uploads/2016/02/multipleimputation.pdf \(section title
 #' "Combining Inferences from Imputed Data Sets"\)
 #' @export
 #' @examples
@@ -185,44 +185,44 @@ gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num
 #'                          function(x){strsplit(x, split = "_")[[1]][2]})
 #'
 #' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 5)
-#' 
+#'
 #' lm.pool <- pool.analyses(latent.datasets, cat~comp+int, lm)
 #' glm.pool <- pool.analyses(latent.datasets, cat~comp+int, glm)
-#' 
+#'
 pool.analyses <- function(latent.datasets, formula, method){
   m <- length(latent.datasets)
   if (m < 1){
     stop("At least 1 analysis is needed for pooling")
   }
-  
+
   if (is.null(formula)){
     stop("A valid formula is required.")
   }
-  
+
   if (is.null(method)){
     stop("A valid method is required.")
   }
-  
+
   ## currently only supports lm and glm(family = "gaussian")
-  fitted.objects <- lapply(latent.datasets, 
+  fitted.objects <- lapply(latent.datasets,
                            FUN = function(x){
                              method(as.formula(formula), data = x)
                            }
   )
-  length(fitted.objects)
+
   k = length(latent.datasets[[1]][1,])
   names <- names(coef(fitted.objects[[1]]))
-  qhat <- matrix(NA, nrow = m, ncol = k, dimnames = list(seq_len(m), 
+  qhat <- matrix(NA, nrow = m, ncol = k, dimnames = list(seq_len(m),
                                                          names))
-  u <- array(NA, dim = c(m, k, k), dimnames = list(seq_len(m), 
+  u <- array(NA, dim = c(m, k, k), dimnames = list(seq_len(m),
                                                    names, names))
-  
+
   for (i in 1:m){
     fit <- fitted.objects[[i]]
     qhat[i, ] <- coef(fit)
     ui <- vcov(fit)
-    if (ncol(ui) != ncol(qhat)) 
-      stop("Different number of parameters: coef(fit): ", 
+    if (ncol(ui) != ncol(qhat))
+      stop("Different number of parameters: coef(fit): ",
            ncol(qhat), ", vcov(fit): ", ncol(ui))
     u[i, , ] <- array(ui, dim = c(1, dim(ui)))
   }
@@ -233,10 +233,10 @@ pool.analyses <- function(latent.datasets, formula, method){
   t <- ubar + (1 + 1/m) * b
   r <- (1 + 1/m) * diag(b/ubar)
   lambda <- (1 + 1/m) * diag(b/t)
-  list(point.estimate = qbar, within.imputation.variance = ubar, 
-       multiple.imputation.estimates = qhat, variance.estimates = u, 
-       differences.from.point.estimate = e, between.imputation.variance = b, 
-       total.variance = t, relative.increase.in.variance.due.to.nonresponse = r, 
+  list(point.estimate = qbar, within.imputation.variance = ubar,
+       multiple.imputation.estimates = qhat, variance.estimates = u,
+       differences.from.point.estimate = e, between.imputation.variance = b,
+       total.variance = t, relative.increase.in.variance.due.to.nonresponse = r,
        fraction.of.missing.info = lambda)
 }
 
