@@ -25,14 +25,11 @@ Given ordinal responses to survey questions, we generate the
 underlying latent variables that correspond to those questions
 }
 \examples{
-setwd("~/GitProjects/440proj") # Set to project folder
-multiis <- read.csv("data/MULTIIS.csv")
-imputed <- gen.imp.resp(multiis)
 # Create indicators (a label indicating which latent variable the question corresponds to)
-grp.indicator <- sapply(names(imputed), FUN =
+grp.indicator <- sapply(names(multiis), FUN =
                          function(x){strsplit(x, split = "_")[[1]][2]})
 
-latent.vars <- gen.latent.vars(imputed, grp.indicator = grp.indicator)
+latent.vars <- gen.latent.vars(multiis, grp.indicator = grp.indicator)
 
 head(latent.vars)
 }

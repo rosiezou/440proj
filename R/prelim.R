@@ -14,11 +14,10 @@ library(MASS)
 #' @return A data.frame containing the imputed responses.
 #' @export
 #' @examples
-#' multiis <- read.csv("data/MULTIIS.csv")
-#' imputed <- gen.imp.resp(multiis)
+#' imputed <- gen.imp.resp(multiis, num.iter = 1)
 #'
 #' head(imputed)
-gen.imp.resp <- function(data, num.iter = 20)
+gen.imp.resp <- function(data, num.iter = 5)
 {
   data.interp <- data # For initial interpolation
 
@@ -85,14 +84,11 @@ gen.imp.resp <- function(data, num.iter = 20)
 #' (j is the total number of latent variables).
 #' @export
 #' @examples
-#' setwd("~/GitProjects/440proj") # Set to project folder
-#' multiis <- read.csv("data/MULTIIS.csv")
-#' imputed <- gen.imp.resp(multiis)
 #' # Create indicators (a label indicating which latent variable the question corresponds to)
-#' grp.indicator <- sapply(names(imputed), FUN =
+#' grp.indicator <- sapply(names(multiis), FUN =
 #'                          function(x){strsplit(x, split = "_")[[1]][2]})
 #'
-#' latent.vars <- gen.latent.vars(imputed, grp.indicator = grp.indicator)
+#' latent.vars <- gen.latent.vars(multiis, grp.indicator = grp.indicator)
 #'
 #' head(latent.vars)
 gen.latent.vars <- function(data, grp.indicator, scores = "Bartlett", num.iter = 20)
@@ -130,19 +126,16 @@ gen.latent.vars <- function(data, grp.indicator, scores = "Bartlett", num.iter =
 #' @return A list containing datasets with latent underlying variables
 #' @export
 #' @examples
-#' setwd("~/GitProjects/440proj") # Set to project folder
-#' multiis <- read.csv("data/MULTIIS.csv")
-#'
 #' # Create indicators (a label indicating which latent variable the question corresponds to)
 #' grp.indicator <- sapply(names(multiis), FUN =
 #'                          function(x){strsplit(x, split = "_")[[1]][2]})
 #'
-#' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 5)
+#' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 1)
 #'
 #' head(latent.datasets[[1]])
 #'
 #' head(latent.datasets[[2]])
-gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num.iter = 20)
+gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num.iter = 5)
 {
   latent.labels <- unique(grp.indicator)
   num.vars <- length(latent.labels)
@@ -177,14 +170,11 @@ gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num
 #' "Combining Inferences from Imputed Data Sets"\)
 #' @export
 #' @examples
-#' setwd("~/GitProjects/440proj") # Set to project folder
-#' multiis <- read.csv("data/MULTIIS.csv")
-#'
 #' # Create indicators (a label indicating which latent variable the question corresponds to)
 #' grp.indicator <- sapply(names(multiis), FUN =
 #'                          function(x){strsplit(x, split = "_")[[1]][2]})
 #'
-#' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 5)
+#' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 1)
 #'
 #' lm.pool <- pool.analyses(latent.datasets, cat~comp+int, lm)
 #' glm.pool <- pool.analyses(latent.datasets, cat~comp+int, glm)
@@ -252,14 +242,11 @@ pool.analyses <- function(latent.datasets, formula, method){
 #' @return A list containing the mean correlation and a p-value from the hypothesis test
 #' @export
 #' @examples
-#' setwd("~/GitProjects/440proj") # Set to project folder
-#' multiis <- read.csv("data/MULTIIS.csv")
-#'
 #' # Create indicators (a label indicating which latent variable the question corresponds to)
 #' grp.indicator <- sapply(names(multiis), FUN =
 #'                          function(x){strsplit(x, split = "_")[[1]][2]})
 #'
-#' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 5)
+#' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 1)
 #'
 #' pooled.cor.test(latent.datasets, indices = c(1,3))
 pooled.cor.test <- function(datasets, indices = c(1, 2), alternative = "two.sided", method = "pearson")

@@ -4,17 +4,36 @@
 \alias{pool.analyses}
 \title{Pool analyses results given M latent variable data sets, and estimate parameters}
 \usage{
-pool.analyses(latent.datasets)
+pool.analyses(latent.datasets, formula, method)
 }
 \arguments{
 \item{latent.datasets}{a (non-empty) list of lists returned by the gen.latent.vars function.}
+
+\item{formula}{a valid formula in the form of response.var ~ independent.vars}
+
+\item{method}{a regression function (e.g. lm). Currently only supports lm and glm}
 }
 \value{
-A list of lists of 5 elements consisting of: within-imputation variance, between-imputation variance, total variance, number of analyses, and a vector of final estimated parameters
+A list 9 elements consisting of: point estimate for parameter Q, within-imputaiton variance,
+estimates of parameter Q obtained from M multiple imputations, estimates of variance, difference
+between estimates of parameter Q and the final point estimate, between-imputation variance,
+total variance, relative increase in variance due to nonresponse, and fraction of missing information.
+These values are calculated according to Rubin's Rules for Multiple Imputation. For more mathematical
+details, please refer to page 5 of this UCLA paper
+https://stats.idre.ucla.edu/wp-content/uploads/2016/02/multipleimputation.pdf \(section title
+"Combining Inferences from Imputed Data Sets"\)
 }
 \description{
 Pool analyses results given M latent variable data sets, and estimate parameters
 }
 \examples{
+# Create indicators (a label indicating which latent variable the question corresponds to)
+grp.indicator <- sapply(names(multiis), FUN =
+                         function(x){strsplit(x, split = "_")[[1]][2]})
+
+latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 1)
+
+lm.pool <- pool.analyses(latent.datasets, cat~comp+int, lm)
+glm.pool <- pool.analyses(latent.datasets, cat~comp+int, glm)
 
 }
