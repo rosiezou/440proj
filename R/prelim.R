@@ -166,7 +166,7 @@ gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num
 #'
 #' @param latent.datasets a (non-empty) list of lists returned by the gen.latent.vars function.
 #' @param formula a valid formula in the form of response.var ~ independent.vars
-#' @param method a valid regression method. Currently only supports lm and glm
+#' @param method a regression function (e.g. lm). Currently only supports lm and glm
 #' @return A list 9 elements consisting of: point estimate for parameter Q, within-imputaiton variance,
 #' estimates of parameter Q obtained from M multiple imputations, estimates of variance, difference
 #' between estimates of parameter Q and the final point estimate, between-imputation variance,
@@ -209,7 +209,7 @@ pool.analyses <- function(latent.datasets, formula, method){
                              method(as.formula(formula), data = x)
                            }
   )
-  length(fitted.objects)
+
   k = length(latent.datasets[[1]][1,])
   names <- names(coef(fitted.objects[[1]]))
   qhat <- matrix(NA, nrow = m, ncol = k, dimnames = list(seq_len(m),
