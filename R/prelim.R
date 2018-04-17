@@ -8,17 +8,16 @@ library(MASS)
 #'
 #' @importFrom MASS polr
 #' @importFrom truncnorm rtruncnorm
-#' @importFrom stats quantile
+#' @importFrom stats quantile qnorm simulate
 #' @param data a data.frame containing ordinal variables (e.g. survey responses).
 #' @param num.iter a number specifying the number of times to iterate the imputation (defaults to 20)
 #' @return A data.frame containing the imputed responses.
 #' @export
 #' @examples
-#' multiis <- read.csv("data/MULTIIS.csv")
-#' imputed <- gen.imp.resp(multiis)
+#' imputed <- gen.imp.resp(multiis, num.iter = 1)
 #'
 #' head(imputed)
-gen.imp.resp <- function(data, num.iter = 20)
+gen.imp.resp <- function(data, num.iter = 5)
 {
   data.interp <- data # For initial interpolation
 
@@ -85,14 +84,11 @@ gen.imp.resp <- function(data, num.iter = 20)
 #' (j is the total number of latent variables).
 #' @export
 #' @examples
-#' setwd("~/GitProjects/440proj") # Set to project folder
-#' multiis <- read.csv("data/MULTIIS.csv")
-#' imputed <- gen.imp.resp(multiis)
 #' # Create indicators (a label indicating which latent variable the question corresponds to)
-#' grp.indicator <- sapply(names(imputed), FUN =
+#' grp.indicator <- sapply(names(multiis), FUN =
 #'                          function(x){strsplit(x, split = "_")[[1]][2]})
 #'
-#' latent.vars <- gen.latent.vars(imputed, grp.indicator = grp.indicator)
+#' latent.vars <- gen.latent.vars(multiis, grp.indicator = grp.indicator)
 #'
 #' head(latent.vars)
 gen.latent.vars <- function(data, grp.indicator, scores = "Bartlett", num.iter = 20)
@@ -130,19 +126,16 @@ gen.latent.vars <- function(data, grp.indicator, scores = "Bartlett", num.iter =
 #' @return A list containing datasets with latent underlying variables
 #' @export
 #' @examples
-#' setwd("~/GitProjects/440proj") # Set to project folder
-#' multiis <- read.csv("data/MULTIIS.csv")
-#'
 #' # Create indicators (a label indicating which latent variable the question corresponds to)
 #' grp.indicator <- sapply(names(multiis), FUN =
 #'                          function(x){strsplit(x, split = "_")[[1]][2]})
 #'
-#' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 5)
+#' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 1)
 #'
 #' head(latent.datasets[[1]])
 #'
 #' head(latent.datasets[[2]])
-gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num.iter = 20)
+gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num.iter = 5)
 {
   latent.labels <- unique(grp.indicator)
   num.vars <- length(latent.labels)
@@ -164,6 +157,7 @@ gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num
 
 #' Pool analyses results given M latent variable data sets, and estimate parameters
 #'
+#' @importFrom stats as.formula coef vcov
 #' @param latent.datasets a (non-empty) list of lists returned by the gen.latent.vars function.
 #' @param formula a valid formula in the form of response.var ~ independent.vars
 #' @param method a regression function (e.g. lm). Currently only supports lm and glm
@@ -177,14 +171,11 @@ gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num
 #' "Combining Inferences from Imputed Data Sets"\)
 #' @export
 #' @examples
-#' setwd("~/GitProjects/440proj") # Set to project folder
-#' multiis <- read.csv("data/MULTIIS.csv")
-#'
 #' # Create indicators (a label indicating which latent variable the question corresponds to)
 #' grp.indicator <- sapply(names(multiis), FUN =
 #'                          function(x){strsplit(x, split = "_")[[1]][2]})
 #'
-#' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 5)
+#' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 1)
 #'
 #' lm.pool <- pool.analyses(latent.datasets, cat~comp+int, lm)
 #' glm.pool <- pool.analyses(latent.datasets, cat~comp+int, glm)
@@ -244,22 +235,19 @@ pool.analyses <- function(latent.datasets, formula, method){
 #'
 #' Given imputed datasets, perform a correlation test between specified columns
 #'
+#' @importFrom stats pnorm cor
 #' @param datasets a list of data.frames
 #' @param indices a vector of length two specifying the index of the columns on which to test correlation
-#' @param grp.indicator a vector indicating which underlying group the columns in each dataset correpsonds to
 #' @param alternative the alternative hypothesis
 #' @param method the method to compute correlation. Currently only "pearson" is supported.
 #' @return A list containing the mean correlation and a p-value from the hypothesis test
 #' @export
 #' @examples
-#' setwd("~/GitProjects/440proj") # Set to project folder
-#' multiis <- read.csv("data/MULTIIS.csv")
-#'
 #' # Create indicators (a label indicating which latent variable the question corresponds to)
 #' grp.indicator <- sapply(names(multiis), FUN =
 #'                          function(x){strsplit(x, split = "_")[[1]][2]})
 #'
-#' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 5)
+#' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 1)
 #'
 #' pooled.cor.test(latent.datasets, indices = c(1,3))
 pooled.cor.test <- function(datasets, indices = c(1, 2), alternative = "two.sided", method = "pearson")

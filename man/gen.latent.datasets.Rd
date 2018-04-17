@@ -5,7 +5,7 @@
 \title{Generate multiple datasets of latent underlying variables}
 \usage{
 gen.latent.datasets(M, data, grp.indicator, scores = "Bartlett",
-  num.iter = 20)
+  num.iter = 5)
 }
 \arguments{
 \item{M}{number of datasets to construct.}
@@ -26,14 +26,11 @@ Given ordinal responses to survey questions, we generate multiple
 underlying latent variable datasets
 }
 \examples{
-setwd("~/GitProjects/440proj") # Set to project folder
-multiis <- read.csv("data/MULTIIS.csv")
-
 # Create indicators (a label indicating which latent variable the question corresponds to)
 grp.indicator <- sapply(names(multiis), FUN =
                          function(x){strsplit(x, split = "_")[[1]][2]})
 
-latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 5)
+latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 1)
 
 head(latent.datasets[[1]])
 

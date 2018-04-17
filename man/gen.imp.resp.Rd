@@ -4,7 +4,7 @@
 \alias{gen.imp.resp}
 \title{Obtain imputed continuous responses from ordinal responses}
 \usage{
-gen.imp.resp(data, num.iter = 20)
+gen.imp.resp(data, num.iter = 5)
 }
 \arguments{
 \item{data}{a data.frame containing ordinal variables (e.g. survey responses).}
@@ -19,8 +19,7 @@ Given a dataset of ordinal values (e.g. survey responses), obtain continuous imp
 on quantiles of N(0,1), and using all other columns (similar to the MICE package).
 }
 \examples{
-multiis <- read.csv("data/MULTIIS.csv")
-imputed <- gen.imp.resp(multiis)
+imputed <- gen.imp.resp(multiis, num.iter = 1)
 
 head(imputed)
 }
