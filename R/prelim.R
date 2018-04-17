@@ -8,7 +8,7 @@ library(MASS)
 #'
 #' @importFrom MASS polr
 #' @importFrom truncnorm rtruncnorm
-#' @importFrom stats quantile
+#' @importFrom stats quantile qnorm simulate
 #' @param data a data.frame containing ordinal variables (e.g. survey responses).
 #' @param num.iter a number specifying the number of times to iterate the imputation (defaults to 20)
 #' @return A data.frame containing the imputed responses.
@@ -157,6 +157,7 @@ gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num
 
 #' Pool analyses results given M latent variable data sets, and estimate parameters
 #'
+#' @importFrom stats as.formula coef vcov
 #' @param latent.datasets a (non-empty) list of lists returned by the gen.latent.vars function.
 #' @param formula a valid formula in the form of response.var ~ independent.vars
 #' @param method a regression function (e.g. lm). Currently only supports lm and glm
@@ -234,9 +235,9 @@ pool.analyses <- function(latent.datasets, formula, method){
 #'
 #' Given imputed datasets, perform a correlation test between specified columns
 #'
+#' @importFrom stats pnorm cor
 #' @param datasets a list of data.frames
 #' @param indices a vector of length two specifying the index of the columns on which to test correlation
-#' @param grp.indicator a vector indicating which underlying group the columns in each dataset correpsonds to
 #' @param alternative the alternative hypothesis
 #' @param method the method to compute correlation. Currently only "pearson" is supported.
 #' @return A list containing the mean correlation and a p-value from the hypothesis test

@@ -15,8 +15,6 @@ pooled.cor.test(datasets, indices = c(1, 2), alternative = "two.sided",
 \item{alternative}{the alternative hypothesis}
 
 \item{method}{the method to compute correlation. Currently only "pearson" is supported.}
-
-\item{grp.indicator}{a vector indicating which underlying group the columns in each dataset correpsonds to}
 }
 \value{
 A list containing the mean correlation and a p-value from the hypothesis test
