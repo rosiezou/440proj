@@ -237,9 +237,9 @@ pool.analyses <- function(latent.datasets, formula, method){
 #'
 #' @importFrom stats pnorm cor
 #' @param datasets a list of data.frames
-#' @param indices a vector of length two specifying the index of the columns on which to test correlation
+#' @param indices a vector of length two containing the indices of columns to test (either column name or number)
 #' @param alternative the alternative hypothesis
-#' @param method the method to compute correlation. Currently only "pearson" is supported.
+#' @param method the method to compute correlation. Either "pearson" or "spearman"
 #' @return A list containing the mean correlation and a p-value from the hypothesis test
 #' @export
 #' @examples
@@ -249,7 +249,8 @@ pool.analyses <- function(latent.datasets, formula, method){
 #'
 #' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 1)
 #'
-#' pooled.cor.test(latent.datasets, indices = c(1,3))
+#' pooled.cor.test(latent.datasets, indices = c("cat","int"), method = "pearson")
+#' pooled.cor.test(latent.datasets, indices = c("cat", "int"), method = "spearman")
 pooled.cor.test <- function(datasets, indices = c(1, 2), alternative = "two.sided", method = "pearson")
 {
   num.sets <- length(datasets) # number of datasets
@@ -260,12 +261,10 @@ pooled.cor.test <- function(datasets, indices = c(1, 2), alternative = "two.side
   for(i in 1:num.sets)
   {
     dataset <- datasets[[i]]
-    if(method == "pearson")
-    {
-      r.value <- cor(dataset[indices[1]], dataset[indices[2]]) # sample correlation
-      corr[i] <- r.value
-      piv.val[i] <- r.value * sqrt(num.row - 2) / sqrt(1 - r.value^2)
-    }
+
+    r.value <- cor(dataset[indices[1]], dataset[indices[2]], method = method) # sample correlation
+    corr[i] <- r.value
+    piv.val[i] <- r.value * sqrt(num.row - 2) / sqrt(1 - r.value^2)
   }
 
   piv.var.between <- sum((piv.val - mean(piv.val))^2) / (num.sets - 1)
