@@ -12,7 +12,7 @@ add <- function(x) Reduce("+", x)
 averaged <- add(latent.datasets)/100
 fit <- lm(int~comp + cat, data = averaged)
 scplot <- scatterplot3d(averaged$comp, averaged$cat, averaged$int, 
-              main="3D Scatterplot of Latent Variables", angle = 120,
+              main="3D Scatterplot of Latent Variables\n with Regression Plane for Int ~  Comp + Cat", angle = 120,
               xlab = "compartmentalization", ylab = "categorization", zlab = "integration", 
               col.grid = "lightgrey", pch = 19, color = "lightblue")
 
