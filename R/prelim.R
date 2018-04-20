@@ -79,8 +79,7 @@ gen.imp.resp <- function(data, num.iter = 5)
 #' @param grp.indicator a (non-empty) numeric vector of data values.
 #' @param scores type of score to use.
 #' @param num.iter number of iterations to use in imputation step
-#' @return A list l of length 2, where l[[1]] is a data.frame containing the underlying
-#' latent variable estimates, and l[[2]] is a vector of j factor analyses objects
+#' @return A data.frame containing the underlying latent variable estimates
 #' (j is the total number of latent variables).
 #' @export
 #' @examples
