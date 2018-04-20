@@ -232,7 +232,7 @@ pool.analyses <- function(latent.datasets, formula, method){
 
   for (i in 1:k){
     se = sqrt(t[i,i])/sqrt(m)
-    p[i,1] <- 2*pnorm(qbar[i]/se, lower.tail=FALSE)
+    p[i,1] <- 2*pnorm(abs(qbar[i]/se), lower.tail=FALSE)
   }
   
   results[, 1] = t(qbar)

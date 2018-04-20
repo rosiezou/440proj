@@ -9,3 +9,7 @@ pooled.add2 <- pool.analyses(latent.datasets, comp~cat + int, lm)
 pooled.add3 <- pool.analyses(latent.datasets, int~comp + cat, lm)
 
 
+library(Rcmdr)
+add <- function(x) Reduce("+", x)
+averaged <- add(latent.datasets)/100
+scatter3d(averaged$comp, averaged$cat, averaged$int)
