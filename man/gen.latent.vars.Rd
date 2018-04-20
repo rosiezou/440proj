@@ -4,7 +4,7 @@
 \alias{gen.latent.vars}
 \title{Generate latent underlying variables given imputed question responses}
 \usage{
-gen.latent.vars(data, grp.indicator, scores = "Bartlett", num.iter = 20)
+gen.latent.vars(data, grp.indicator, scores = "Bartlett", num.iter = 5)
 }
 \arguments{
 \item{data}{a (non-empty) numeric vector of data values.}
@@ -16,8 +16,7 @@ gen.latent.vars(data, grp.indicator, scores = "Bartlett", num.iter = 20)
 \item{num.iter}{number of iterations to use in imputation step}
 }
 \value{
-A list l of length 2, where l[[1]] is a data.frame containing the underlying
-latent variable estimates, and l[[2]] is a vector of j factor analyses objects
+A data.frame containing the underlying latent variable estimates
 (j is the total number of latent variables).
 }
 \description{
@@ -29,7 +28,7 @@ underlying latent variables that correspond to those questions
 grp.indicator <- sapply(names(multiis), FUN =
                          function(x){strsplit(x, split = "_")[[1]][2]})
 
-latent.vars <- gen.latent.vars(multiis, grp.indicator = grp.indicator)
+latent.vars <- gen.latent.vars(multiis, grp.indicator = grp.indicator, num.iter = 5)
 
 head(latent.vars)
 }
