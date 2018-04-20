@@ -157,7 +157,7 @@ gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num
 
 #' Pool analyses results given M latent variable data sets, and estimate parameters
 #'
-#' @importFrom stats as.formula coef vcov
+#' @importFrom stats as.formula coef vcov pnorm
 #' @param latent.datasets a (non-empty) list of lists returned by the gen.latent.vars function.
 #' @param formula a valid formula in the form of response.var ~ independent.vars
 #' @param method a regression function (e.g. lm). Currently only supports lm and glm
