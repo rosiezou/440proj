@@ -1,13 +1,11 @@
 library(stat440pkg)
-multiis <- read.csv("data/MULTIIS.csv")
-M = 100
-all_imputations <- vector(mode = "list", length = M)
-for (i in 1:M){
-  imputed <- gen.imp.resp(multiis)
-  grp.indicator <- sapply(names(imputed), FUN =
-                            function(x){strsplit(x, split = "_")[[1]][2]})
-  latent.vars <- gen.latent.vars(imputed, grp.indicator = grp.indicator)
-  all_imputations[[i]] <- latent.vars
-}
 
-pooled_results <- pool.analyses(M, all_imputations)
+grp.indicator <- sapply(names(multiis), FUN =
+                          function(x){strsplit(x, split = "_")[[1]][2]})
+
+latent.datasets <- gen.latent.datasets(100, multiis, grp.indicator = grp.indicator, num.iter = 5)
+pooled.add1 <- pool.analyses(latent.datasets, cat~comp + int, lm)
+pooled.add2 <- pool.analyses(latent.datasets, comp~cat + int, lm)
+pooled.add3 <- pool.analyses(latent.datasets, int~comp + cat, lm)
+
+

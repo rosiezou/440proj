@@ -193,7 +193,7 @@ pool.analyses <- function(latent.datasets, formula, method){
   if (is.null(method)){
     stop("A valid method is required.")
   }
-
+  
   ## currently only supports lm and glm(family = "gaussian")
   fitted.objects <- lapply(latent.datasets,
                            FUN = function(x){
@@ -224,9 +224,25 @@ pool.analyses <- function(latent.datasets, formula, method){
   t <- ubar + (1 + 1/m) * b
   r <- (1 + 1/m) * diag(b/ubar)
   lambda <- (1 + 1/m) * diag(b/t)
+  
+  results <- matrix(NA, nrow = k, ncol = 3)
+  rownames(results) <- names
+  colnames(results) <- c("Estimate", "Std. Error", "p value")
+  p <- matrix(NA, nrow = k, ncol = 1)
+
+  for (i in 1:k){
+    se = sqrt(t[i,i])/sqrt(m)
+    p[i,1] <- 2*pnorm(qbar[i]/se, lower.tail=FALSE)
+  }
+  
+  results[, 1] = t(qbar)
+  results[, 2] = t(sqrt(diag(t))/sqrt(m))
+  results[, 3] = p
+  print(results)
+
   list(point.estimate = qbar, within.imputation.variance = ubar,
        multiple.imputation.estimates = qhat, variance.estimates = u,
        differences.from.point.estimate = e, between.imputation.variance = b,
        total.variance = t, relative.increase.in.variance.due.to.nonresponse = r,
-       fraction.of.missing.info = lambda)
+       fraction.of.missing.info = lambda, hypothesis.test = results)
 }
