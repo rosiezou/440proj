@@ -53,25 +53,3 @@ test_that("pool analyses test",{
   expect_that(dim(matrix(lm.pool$point.estimate))[1], equals(3))
   expect_that(dim(matrix(lm.pool.with.1.indepvar$point.estimate))[1], equals(2))
 })
-
-test_that("reproducibility",{
-  set.seed(1)
-  grp.indicator <- sapply(names(multiis), FUN =
-                            function(x){strsplit(x, split = "_")[[1]][2]})
-  latent.vars <- gen.latent.vars(multiis, grp.indicator = grp.indicator)
-  sum1 <- sum(latent.vars)
-
-  set.seed(1)
-  new.latent.vars <- gen.latent.vars(multiis,grp.indicator = grp.indicator, num.iter)
-  sum2 <- sum(new.latent.vars)
-  expect_that(sum1, equals(sum2))
-
-  set.seed(1)
-  latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 1)
-  sum.point.estimate1 <- sum(latent.datasets$point.estimate)
-
-  set.seed(1)
-  new.latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 1)
-  sum.point.estimate2 <- sum(new.latent.datasets$point.estimate)
-  expect_that(sum.point.estimate1, equals(sum.point.estimate2))
-})

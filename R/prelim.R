@@ -87,10 +87,10 @@ gen.imp.resp <- function(data, num.iter = 5)
 #' grp.indicator <- sapply(names(multiis), FUN =
 #'                          function(x){strsplit(x, split = "_")[[1]][2]})
 #'
-#' latent.vars <- gen.latent.vars(multiis, grp.indicator = grp.indicator)
+#' latent.vars <- gen.latent.vars(multiis, grp.indicator = grp.indicator, num.iter = 5)
 #'
 #' head(latent.vars)
-gen.latent.vars <- function(data, grp.indicator, scores = "Bartlett", num.iter = 20)
+gen.latent.vars <- function(data, grp.indicator, scores = "Bartlett", num.iter = 5)
 {
   imp.resp.data <- gen.imp.resp(data, num.iter = num.iter)
   latent.labels <- unique(grp.indicator) # Get unique latent variable labels
@@ -192,7 +192,7 @@ pool.analyses <- function(latent.datasets, formula, method){
   if (is.null(method)){
     stop("A valid method is required.")
   }
-  
+
   ## currently only supports lm and glm(family = "gaussian")
   fitted.objects <- lapply(latent.datasets,
                            FUN = function(x){
@@ -223,7 +223,7 @@ pool.analyses <- function(latent.datasets, formula, method){
   t <- ubar + (1 + 1/m) * b
   r <- (1 + 1/m) * diag(b/ubar)
   lambda <- (1 + 1/m) * diag(b/t)
-  
+
   results <- matrix(NA, nrow = k, ncol = 3)
   rownames(results) <- names
   colnames(results) <- c("Estimate", "Std. Error", "p value")
@@ -233,7 +233,7 @@ pool.analyses <- function(latent.datasets, formula, method){
     se = sqrt(t[i,i])/sqrt(m)
     p[i,1] <- 2*pnorm(abs(qbar[i]/se), lower.tail=FALSE)
   }
-  
+
   results[, 1] = t(qbar)
   results[, 2] = t(sqrt(diag(t))/sqrt(m))
   results[, 3] = p
