@@ -16,8 +16,7 @@ gen.latent.vars(data, grp.indicator, scores = "Bartlett", num.iter = 20)
 \item{num.iter}{number of iterations to use in imputation step}
 }
 \value{
-A list l of length 2, where l[[1]] is a data.frame containing the underlying
-latent variable estimates, and l[[2]] is a vector of j factor analyses objects
+A data.frame containing the underlying latent variable estimates
 (j is the total number of latent variables).
 }
 \description{

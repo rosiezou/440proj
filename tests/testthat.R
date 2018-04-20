@@ -14,7 +14,7 @@ test_that("generate imputed responses",{
 test_that("generate latent variables",{
   grp.indicator <- sapply(names(multiis), FUN =
                             function(x){strsplit(x, split = "_")[[1]][2]})
-  latent.vars <- gen.latent.vars(multiis, grp.indicator = grp.indicator)
+  latent.vars <- gen.latent.vars(multiis, grp.indicator = grp.indicator, num.iter = 1)
   expect_that(latent.vars, is_a("data.frame"))
   expect_that(dim(latent.vars)[1], equals(333))
   expect_that(dim(latent.vars)[2], equals(3))
@@ -24,7 +24,7 @@ test_that("generate latent variables",{
 test_that("generate sets of latent variables",{
   grp.indicator <- sapply(names(multiis), FUN =
                             function(x){strsplit(x, split = "_")[[1]][2]})
-  
+
   latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 1)
   expect_that(latent.datasets, is_a("list"))
   expect_that(length(latent.datasets), equals(5))
@@ -35,9 +35,9 @@ test_that("generate sets of latent variables",{
 test_that("pool analyses test",{
   grp.indicator <- sapply(names(multiis), FUN =
                             function(x){strsplit(x, split = "_")[[1]][2]})
-  
+
   latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 1)
-  
+
   lm.pool <- pool.analyses(latent.datasets, cat~comp+int, lm)
   glm.pool <- pool.analyses(latent.datasets, cat~comp+int, glm)
   lm.pool.with.1.indepvar <- pool.analyses(latent.datasets, cat~comp, lm)
@@ -60,16 +60,16 @@ test_that("reproducibility",{
                             function(x){strsplit(x, split = "_")[[1]][2]})
   latent.vars <- gen.latent.vars(multiis, grp.indicator = grp.indicator)
   sum1 <- sum(latent.vars)
-  
+
   set.seed(1)
-  new.latent.vars <- gen.latent.vars(multiis,grp.indicator = grp.indicator)
+  new.latent.vars <- gen.latent.vars(multiis,grp.indicator = grp.indicator, num.iter)
   sum2 <- sum(new.latent.vars)
   expect_that(sum1, equals(sum2))
-  
+
   set.seed(1)
   latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 1)
   sum.point.estimate1 <- sum(latent.datasets$point.estimate)
-  
+
   set.seed(1)
   new.latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 1)
   sum.point.estimate2 <- sum(new.latent.datasets$point.estimate)
