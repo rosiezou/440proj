@@ -201,7 +201,7 @@ pool.analyses <- function(latent.datasets, formula, method){
                            }
   )
 
-  k = length(latent.datasets[[1]][1,])
+  k = length(fitted.objects[[1]]$coefficients)
   names <- names(coef(fitted.objects[[1]]))
   qhat <- matrix(NA, nrow = m, ncol = k, dimnames = list(seq_len(m),
                                                          names))
