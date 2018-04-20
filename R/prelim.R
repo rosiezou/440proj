@@ -79,8 +79,7 @@ gen.imp.resp <- function(data, num.iter = 5)
 #' @param grp.indicator a (non-empty) numeric vector of data values.
 #' @param scores type of score to use.
 #' @param num.iter number of iterations to use in imputation step
-#' @return A data.frame containing the underlying latent variable estimates
-#' (j is the total number of latent variables).
+#' @return A data.frame containing the underlying latent variable estimates.
 #' @export
 #' @examples
 #' # Create indicators (a label indicating which latent variable the question corresponds to)
@@ -160,11 +159,12 @@ gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num
 #' @param latent.datasets a (non-empty) list of lists returned by the gen.latent.vars function.
 #' @param formula a valid formula in the form of response.var ~ independent.vars
 #' @param method a regression function (e.g. lm). Currently only supports lm and glm
-#' @return A list 9 elements consisting of: point estimate for parameter Q, within-imputaiton variance,
+#' @return A list 10 elements consisting of: point estimate for parameter Q, within-imputaiton variance,
 #' estimates of parameter Q obtained from M multiple imputations, estimates of variance, difference
 #' between estimates of parameter Q and the final point estimate, between-imputation variance,
-#' total variance, relative increase in variance due to nonresponse, and fraction of missing information.
-#' These values are calculated according to Rubin's Rules for Multiple Imputation. For more mathematical
+#' total variance, relative increase in variance due to nonresponse, fraction of missing information,
+#' and results from hypothesis testing with H_0: beta_i = 0 for i = 1 ... number_of_parameters.
+#' The mean and variance are calculated according to Rubin's Rules for Multiple Imputation. For more mathematical
 #' details, please refer to page 5 of this UCLA paper
 #' https://stats.idre.ucla.edu/wp-content/uploads/2016/02/multipleimputation.pdf \(section title
 #' "Combining Inferences from Imputed Data Sets"\)

@@ -16,8 +16,7 @@ gen.latent.vars(data, grp.indicator, scores = "Bartlett", num.iter = 5)
 \item{num.iter}{number of iterations to use in imputation step}
 }
 \value{
-A data.frame containing the underlying latent variable estimates
-(j is the total number of latent variables).
+A data.frame containing the underlying latent variable estimates.
 }
 \description{
 Given ordinal responses to survey questions, we generate the
