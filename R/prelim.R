@@ -237,7 +237,6 @@ pool.analyses <- function(latent.datasets, formula, method){
   results[, 1] = t(qbar)
   results[, 2] = t(sqrt(diag(t))/sqrt(m))
   results[, 3] = p
-  print(results)
 
   list(point.estimate = qbar, within.imputation.variance = ubar,
        multiple.imputation.estimates = qhat, variance.estimates = u,

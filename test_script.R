@@ -1,7 +1,8 @@
 library(stat440pkg)
+M <- 50
 grp.indicator <- sapply(names(multiis), FUN =
                           function(x){strsplit(x, split = "_")[[1]][2]})
-latent.datasets <- gen.latent.datasets(100, multiis, grp.indicator = grp.indicator, num.iter = 5)
+latent.datasets <- gen.latent.datasets(M, multiis, grp.indicator = grp.indicator, num.iter = 5)
 pooled.add1 <- pool.analyses(latent.datasets, cat~comp + int, lm)
 pooled.add2 <- pool.analyses(latent.datasets, comp~cat + int, lm)
 pooled.add3 <- pool.analyses(latent.datasets, int~comp + cat, lm)
@@ -9,11 +10,11 @@ pooled.add3 <- pool.analyses(latent.datasets, int~comp + cat, lm)
 
 library(scatterplot3d)
 add <- function(x) Reduce("+", x)
-averaged <- add(latent.datasets)/100
+averaged <- add(latent.datasets)/M
 fit <- lm(int~comp + cat, data = averaged)
-scplot <- scatterplot3d(averaged$comp, averaged$cat, averaged$int, 
+scplot <- scatterplot3d(averaged$comp, averaged$cat, averaged$int,
               main="3D Scatterplot of Latent Variables\n with Regression Plane for Int ~  Comp + Cat", angle = 120,
-              xlab = "compartmentalization", ylab = "categorization", zlab = "integration", 
+              xlab = "compartmentalization", ylab = "categorization", zlab = "integration",
               col.grid = "lightgrey", pch = 19, color = "lightblue")
 
 scplot$plane3d(fit, lty = "dotted")
@@ -25,3 +26,9 @@ segments(orig$x, orig$y, plane$x, plane$y,
 
 pairs(averaged)
 plot(fit)
+
+# ggplot2 pairs plot
+library(ggplot2)
+library(GGally)
+
+ggpairs(averaged)
