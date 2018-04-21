@@ -155,11 +155,11 @@ gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num
 
 #' Pool analyses results given M latent variable data sets, and estimate parameters
 #'
-#' @importFrom stats as.formula coef vcov pnorm
+#' @importFrom stats as.formula coef vcov pnorm lm
 #' @param latent.datasets a (non-empty) list of lists returned by the gen.latent.vars function.
 #' @param formula a valid formula in the form of response.var ~ independent.vars
-#' @param method a regression function (e.g. lm). Currently only supports lm and glm
-#' @return A list 10 elements consisting of: point estimate for parameter Q, within-imputaiton variance,
+#' @param method a regression function (e.g. lm). Currently only supports lm
+#' @return A list of 10 elements consisting of: point estimate for parameter Q, within-imputaiton variance,
 #' estimates of parameter Q obtained from M multiple imputations, estimates of variance, difference
 #' between estimates of parameter Q and the final point estimate, between-imputation variance,
 #' total variance, relative increase in variance due to nonresponse, fraction of missing information,
@@ -178,26 +178,26 @@ gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num
 #'
 #' lm.pool <- pool.analyses(latent.datasets, cat~comp+int, lm)
 #'
-pool.analyses <- function(latent.datasets, formula, method){
+pool.analyses <- function(latent.datasets, formula, method = lm){
   ## m is the number of imputed data sets, requires at least 1 for pool analysis
   m <- length(latent.datasets)
   if (m < 1){
     stop("At least 1 analysis is needed for pooling")
   }
-  
+
   ## A valid formula is required for pooled analysis. Currently only linear regression models
   ##    are supporte by this package. Formula must follow the format "dependent_var ~ independent_vars"
   if (is.null(formula)){
     stop("A valid formula is required.")
   }
-  
+
   ## We designed the function so that in the future it could be easily extended to accept more methods.
   ##   So far only linear regression is supported.
   ## method cannot be null and must be lm
   if (is.null(method)){
     stop("A valid method is required.")
   }
-  
+
   ## Apply the lm function to all M imputed data sets. Note that all data sets are fitted using
   ##   the same formula and lm function call
   fitted.objects <- lapply(latent.datasets,
@@ -205,7 +205,7 @@ pool.analyses <- function(latent.datasets, formula, method){
                              method(as.formula(formula), data = x)
                            }
   )
-  
+
   ## Get the number and names of parameters
   k = length(fitted.objects[[1]]$coefficients)
   names <- names(coef(fitted.objects[[1]]))
@@ -213,7 +213,7 @@ pool.analyses <- function(latent.datasets, formula, method){
                                                          names))
   u <- array(NA, dim = c(m, k, k), dimnames = list(seq_len(m),
                                                    names, names))
-  
+
   ## This part of the code emulates the behaviour of pool() function in MICE package
   for (i in 1:m){
     fit <- fitted.objects[[i]] ## get fitted object
@@ -224,7 +224,7 @@ pool.analyses <- function(latent.datasets, formula, method){
            ncol(qhat), ", vcov(fit): ", ncol(ui))
     u[i, , ] <- array(ui, dim = c(1, dim(ui)))
   }
-  
+
   ## calcualte sample mean (i.e. point estimate) and sample variance using Rubin's rules
   qbar <- apply(qhat, 2, mean)          ## sample mean of parameters
   ubar <- apply(u, c(2, 3), mean)       ## within-imputation variance
@@ -248,7 +248,7 @@ pool.analyses <- function(latent.datasets, formula, method){
   results[, 1] = t(qbar)
   results[, 2] = t(sqrt(diag(t))/sqrt(m))
   results[, 3] = p
-  
+
   results <- signif(results, 3)
 
   rval <- list(point.estimate = qbar, within.imputation.variance = ubar,
@@ -256,6 +256,6 @@ pool.analyses <- function(latent.datasets, formula, method){
                differences.from.point.estimate = e, between.imputation.variance = b,
                total.variance = t, relative.increase.in.variance.due.to.nonresponse = r,
                fraction.of.missing.info = lambda, hypothesis.test = results)
-  
+
   return(rval)
 }

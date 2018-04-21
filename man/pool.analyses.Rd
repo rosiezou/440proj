@@ -4,17 +4,17 @@
 \alias{pool.analyses}
 \title{Pool analyses results given M latent variable data sets, and estimate parameters}
 \usage{
-pool.analyses(latent.datasets, formula, method)
+pool.analyses(latent.datasets, formula, method = lm)
 }
 \arguments{
 \item{latent.datasets}{a (non-empty) list of lists returned by the gen.latent.vars function.}
 
 \item{formula}{a valid formula in the form of response.var ~ independent.vars}
 
-\item{method}{a regression function (e.g. lm). Currently only supports lm and glm}
+\item{method}{a regression function (e.g. lm). Currently only supports lm}
 }
 \value{
-A list 10 elements consisting of: point estimate for parameter Q, within-imputaiton variance,
+A list of 10 elements consisting of: point estimate for parameter Q, within-imputaiton variance,
 estimates of parameter Q obtained from M multiple imputations, estimates of variance, difference
 between estimates of parameter Q and the final point estimate, between-imputation variance,
 total variance, relative increase in variance due to nonresponse, fraction of missing information,
