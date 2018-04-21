@@ -1,0 +1,49 @@
+---
+title: "STAT440 Project Appendix"
+author: "Ian & Rosie"
+date: "April 20, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Visual Tests
+
+Here, we'll perform some visual tests allowing the user to ensure that `stat440pkg` is returning sane results.
+
+## `gen.imp.resp` 
+
+Let's make sure `gen.imp.resp` is returning somewhat normally-distributed data.
+```{r}
+library(stat440pkg)
+library(tidyr)
+library(ggplot2)
+
+imp.resp <- gen.imp.resp(data = multiis, num.iter = 5)
+gathered.data <- gather(imp.resp)
+p <- ggplot(gathered.data) + 
+  geom_histogram(aes(x = value), binwidth = 0.25) + 
+  facet_wrap(~ key)
+
+plot(p)
+```
+
+## `gen.latent.vars`
+
+Let's make sure `gen.latent.vars` is returning somewhat normally-distributed data.
+
+```{r}
+grp.indicator <- sapply(names(multiis), FUN =
+                            function(x){strsplit(x, split = "_")[[1]][2]})
+
+lv <- gen.latent.vars(data = multiis, grp.indicator = grp.indicator, num.iter = 5)
+
+gathered.data <- gather(lv)
+p <- ggplot(gathered.data) + 
+  geom_histogram(aes(x = value), binwidth = 0.25) + 
+  facet_wrap(~ key)
+
+plot(p)
+```
