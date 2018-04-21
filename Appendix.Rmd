@@ -1,5 +1,5 @@
 ---
-title: "STAT440 Project Appendix"
+title: "Appendix"
 author: "Ian & Rosie"
 date: "April 20, 2018"
 output: pdf_document
@@ -32,13 +32,15 @@ plot(p)
 
 ## `gen.latent.vars`
 
-Let's make sure `gen.latent.vars` is returning somewhat normally-distributed data.
+Let's make sure `gen.latent.vars` is returning somewhat normally-distributed data. First we'll do so for Bartlett scores, then Thompson regression scores.
+
+### Bartlett factor scores
 
 ```{r}
 grp.indicator <- sapply(names(multiis), FUN =
                             function(x){strsplit(x, split = "_")[[1]][2]})
 
-lv <- gen.latent.vars(data = multiis, grp.indicator = grp.indicator, num.iter = 5)
+lv <- gen.latent.vars(data = multiis, grp.indicator = grp.indicator, num.iter = 5, scores = "Bartlett")
 
 gathered.data <- gather(lv)
 p <- ggplot(gathered.data) + 
@@ -46,4 +48,60 @@ p <- ggplot(gathered.data) +
   facet_wrap(~ key)
 
 plot(p)
+```
+
+### Thompson factor scores
+
+```{r}
+grp.indicator <- sapply(names(multiis), FUN =
+                            function(x){strsplit(x, split = "_")[[1]][2]})
+
+lv <- gen.latent.vars(data = multiis, grp.indicator = grp.indicator, num.iter = 5, scores = "regression")
+
+gathered.data <- gather(lv)
+p <- ggplot(gathered.data) + 
+  geom_histogram(aes(x = value), binwidth = 0.2) + 
+  facet_wrap(~ key)
+
+plot(p)
+```
+
+# Results using Thompson scores for latent variables
+
+Here, we'll create the similar plots to those that appear in the Results section of the report, but using Thompson scores. 
+
+```{r, warning=FALSE}
+M <- 50
+latent.datasets <- gen.latent.datasets(M, multiis, grp.indicator = grp.indicator, num.iter = 5, scores = "regression")
+
+pooled.add1 <- pool.analyses(latent.datasets, cat~comp + int, lm)
+pooled.add2 <- pool.analyses(latent.datasets, comp~cat + int, lm)
+pooled.add3 <- pool.analyses(latent.datasets, int~comp + cat, lm)
+
+signif(pooled.add1$hypothesis.test, digits = 3)
+signif(pooled.add2$hypothesis.test, digits = 3)
+signif(pooled.add3$hypothesis.test, digits = 3)
+
+library(scatterplot3d)
+add <- function(x) Reduce("+", x)
+averaged <- add(latent.datasets)/M
+fit <- lm(int~comp + cat, data = averaged)
+scplot <- scatterplot3d(averaged$comp, averaged$cat, averaged$int,
+              main="3D Scatterplot of Latent Variables\n with Regression Plane for Int ~  Comp + Cat", angle = 120,
+              xlab = "compartmentalization", ylab = "categorization", zlab = "integration",
+              col.grid = "lightgrey", pch = 19, color = "lightblue")
+
+scplot$plane3d(fit, lty = "dotted")
+orig <- scplot$xyz.convert(averaged$comp, averaged$cat, averaged$int)
+plane <- scplot$xyz.convert(averaged$comp, averaged$cat, fitted(fit))
+i.negpos <- 1 + (resid(fit) > 0)
+segments(orig$x, orig$y, plane$x, plane$y,
+         col = c("blue", "red")[i.negpos], lty = (2:1)[i.negpos])
+
+
+# ggplot2 pairs plot
+library(ggplot2)
+library(GGally)
+
+ggpairs(averaged)
 ```
