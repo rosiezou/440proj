@@ -241,12 +241,14 @@ pool.analyses <- function(latent.datasets, formula, method){
 
   for (i in 1:k){
     se = sqrt(t[i,i])/sqrt(m)          ## calculate standard error
-    p[i,1] <- 2*pnorm(abs(qbar[i]/se), lower.tail=FALSE)  ## calculate p values
+    pval <- 2*pnorm(abs(qbar[i]/se), lower.tail=FALSE)  ## calculate p values
+    p[i,1] <- pval
   }
 
   results[, 1] = t(qbar)
   results[, 2] = t(sqrt(diag(t))/sqrt(m))
   results[, 3] = p
+  results <- signif(results, 5)
   print(results)
 
   rval <- list(point.estimate = qbar, within.imputation.variance = ubar,
