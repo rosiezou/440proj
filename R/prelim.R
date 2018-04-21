@@ -100,7 +100,7 @@ gen.latent.vars <- function(data, grp.indicator, scores = "Bartlett", num.iter =
   latent.vars.mtx <- matrix(nrow = nrow(imp.resp.data), ncol = length(latent.labels))
   latent.vars.df <- as.data.frame(latent.vars.mtx)
   names(latent.vars.df) <- latent.labels
-  faresults <- vector(mode="list", length = length(latent.labels))
+  faresults <- vector(mode="list", length = length(latent.labels)) # Where to store results from factanal
   for(label in latent.labels)
   {
     latent.cols.indic <- grp.indicator == label # TRUE if column corresponds to label
@@ -135,19 +135,19 @@ gen.latent.vars <- function(data, grp.indicator, scores = "Bartlett", num.iter =
 #' head(latent.datasets[[2]])
 gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num.iter = 5)
 {
-  latent.labels <- unique(grp.indicator)
-  num.vars <- length(latent.labels)
+  latent.labels <- unique(grp.indicator) # labels or "names" of the different latent variables. e.g. c("cat", "int", "comp")
+  num.vars <- length(latent.labels) # number of latent vars
 
-  empty <- as.data.frame(matrix(NA, nrow = nrow(data), ncol = num.vars))
-  names(empty) <- latent.labels
-  datasets <- rep(list(empty), M)
+  empty <- as.data.frame(matrix(NA, nrow = nrow(data), ncol = num.vars)) # empty data.frame. Just initializing size here.
+  names(empty) <- latent.labels # Name columns. Specifically each column will correspond to a latent variable
+  datasets <- rep(list(empty), M) # Create M copies of the empty dataset in a list
 
   for(i in 1:M)
   {
     latent.vars <- gen.latent.vars(data = data, grp.indicator = grp.indicator,
-                                   scores = scores, num.iter = num.iter)
+                                   scores = scores, num.iter = num.iter) # Generate latent variables
 
-    datasets[[i]] <- latent.vars
+    datasets[[i]] <- latent.vars # Store each generated latent dataset in a list
   }
 
   return(datasets)
