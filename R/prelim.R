@@ -177,71 +177,85 @@ gen.latent.datasets <- function(M, data, grp.indicator, scores = "Bartlett", num
 #' latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 1)
 #'
 #' lm.pool <- pool.analyses(latent.datasets, cat~comp+int, lm)
-#' glm.pool <- pool.analyses(latent.datasets, cat~comp+int, glm)
 #'
 pool.analyses <- function(latent.datasets, formula, method){
+  ## m is the number of imputed data sets, requires at least 1 for pool analysis
   m <- length(latent.datasets)
   if (m < 1){
     stop("At least 1 analysis is needed for pooling")
   }
-
+  
+  ## A valid formula is required for pooled analysis. Currently only linear regression models
+  ##    are supporte by this package. Formula must follow the format "dependent_var ~ independent_vars"
   if (is.null(formula)){
     stop("A valid formula is required.")
   }
-
+  
+  ## We designed the function so that in the future it could be easily extended to accept more methods.
+  ##   So far only linear regression is supported.
+  ## method cannot be null and must be lm
   if (is.null(method)){
     stop("A valid method is required.")
   }
-
-  ## currently only supports lm and glm(family = "gaussian")
+  
+  ## Apply the lm function to all M imputed data sets. Note that all data sets are fitted using
+  ##   the same formula and lm function call
   fitted.objects <- lapply(latent.datasets,
                            FUN = function(x){
                              method(as.formula(formula), data = x)
                            }
   )
-
+  
+  ## Get the number and names of parameters
   k = length(fitted.objects[[1]]$coefficients)
   names <- names(coef(fitted.objects[[1]]))
   qhat <- matrix(NA, nrow = m, ncol = k, dimnames = list(seq_len(m),
                                                          names))
   u <- array(NA, dim = c(m, k, k), dimnames = list(seq_len(m),
                                                    names, names))
-
+  
+  ## This part of the code emulates the behaviour of pool() function in MICE package
   for (i in 1:m){
-    fit <- fitted.objects[[i]]
-    qhat[i, ] <- coef(fit)
-    ui <- vcov(fit)
-    if (ncol(ui) != ncol(qhat))
+    fit <- fitted.objects[[i]] ## get fitted object
+    qhat[i, ] <- coef(fit)     ## parameters for a single fitted object out of m
+    ui <- vcov(fit)            ## variance-covariance matrix of the fitted object
+    if (ncol(ui) != ncol(qhat))  ## double-check to make sure that we don't have dimensionality issues
       stop("Different number of parameters: coef(fit): ",
            ncol(qhat), ", vcov(fit): ", ncol(ui))
     u[i, , ] <- array(ui, dim = c(1, dim(ui)))
   }
-  qbar <- apply(qhat, 2, mean)
-  ubar <- apply(u, c(2, 3), mean)
-  e <- qhat - matrix(qbar, nrow = m, ncol = k, byrow = TRUE)
-  b <- (t(e) %*% e)/(m - 1)
-  t <- ubar + (1 + 1/m) * b
-  r <- (1 + 1/m) * diag(b/ubar)
-  lambda <- (1 + 1/m) * diag(b/t)
+  
+  ## calcualte sample mean (i.e. point estimate) and sample variance using Rubin's rules
+  qbar <- apply(qhat, 2, mean)          ## sample mean of parameters
+  ubar <- apply(u, c(2, 3), mean)       ## within-imputation variance
+  e <- qhat - matrix(qbar, nrow = m, ncol = k, byrow = TRUE)   ## difference betw. each parameter estimate and mean
+  b <- (t(e) %*% e)/(m - 1)             ## between-imputation variance
+  t <- ubar + (1 + 1/m) * b             ## total variance
+  r <- (1 + 1/m) * diag(b/ubar)         ## relative increase in variance due to non-response
+  lambda <- (1 + 1/m) * diag(b/t)       ## fraction of missing information
 
-  results <- matrix(NA, nrow = k, ncol = 3)
+  results <- matrix(NA, nrow = k, ncol = 3) ## package the results to be displayed
   rownames(results) <- names
   colnames(results) <- c("Estimate", "Std. Error", "p value")
   p <- matrix(NA, nrow = k, ncol = 1)
 
   for (i in 1:k){
-    se = sqrt(t[i,i])/sqrt(m)
-    p[i,1] <- 2*pnorm(abs(qbar[i]/se), lower.tail=FALSE)
+    se = sqrt(t[i,i])/sqrt(m)          ## calculate standard error
+    pval <- 2*pnorm(abs(qbar[i]/se), lower.tail=FALSE)  ## calculate p values
+    p[i,1] <- pval
   }
 
   results[, 1] = t(qbar)
   results[, 2] = t(sqrt(diag(t))/sqrt(m))
   results[, 3] = p
+  results <- signif(results, 5)
   print(results)
 
-  list(point.estimate = qbar, within.imputation.variance = ubar,
-       multiple.imputation.estimates = qhat, variance.estimates = u,
-       differences.from.point.estimate = e, between.imputation.variance = b,
-       total.variance = t, relative.increase.in.variance.due.to.nonresponse = r,
-       fraction.of.missing.info = lambda, hypothesis.test = results)
+  rval <- list(point.estimate = qbar, within.imputation.variance = ubar,
+               multiple.imputation.estimates = qhat, variance.estimates = u,
+               differences.from.point.estimate = e, between.imputation.variance = b,
+               total.variance = t, relative.increase.in.variance.due.to.nonresponse = r,
+               fraction.of.missing.info = lambda, hypothesis.test = results)
+  
+  return(rval)
 }
