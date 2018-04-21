@@ -35,6 +35,5 @@ grp.indicator <- sapply(names(multiis), FUN =
 latent.datasets <- gen.latent.datasets(5, multiis, grp.indicator = grp.indicator, num.iter = 1)
 
 lm.pool <- pool.analyses(latent.datasets, cat~comp+int, lm)
-glm.pool <- pool.analyses(latent.datasets, cat~comp+int, glm)
 
 }
